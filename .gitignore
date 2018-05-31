@@ -2,4 +2,5 @@
 .ipynb_checkpoints
 
 # qpeak save files
-.qpeaks
+.qpeak
+peaks/*
