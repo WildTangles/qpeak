@@ -3,18 +3,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 from skimage.feature import peak_local_max
+from pathos import pools
 import pickle
 import os
 import glob
+import sys
 
 saveDir = 'peaks'
 
-EList = np.linspace(0.00125,0.00300,100)
-wdList = np.linspace(10.6070,10.6109,100)
+EList = np.linspace(0.00125,0.00300,3)
+wdList = np.linspace(10.6070,10.6109,3)
 
+WORKERS = 9
 
-def routine(E_i,wd_i):
+def routine(runParam):
     
+    E_i = runParam[0]
+    wd_i = runParam[1]
+    saveIdx = runParam[2]
+
     print('running param set {} {}'.format(E_i, wd_i))
     
     # Define all the variables 
@@ -119,22 +126,33 @@ def routine(E_i,wd_i):
     #infoPacket['Q3'] = Q3
     #infoPacket['xvec'] = xvec
     #infoPacket['yvec'] = yvec
-    return infoPacket
+    #return infoPacket
+
+    pickle.dump(infoPacket, open(os.path.join(saveDir,'{}.qpeak'.format(saveIdx)),'wb'))
             
 
 saveIdx = 0
 
 if os.path.exists(saveDir):
     print('SAVE FOLDER ALREADY EXISTS. MOVE/DELETE IT AND TRY AGAIN!')
+    sys.exit(1)
 
 totalL = len(EList)*len(wdList)
+runParams = []
 for E_i in EList:
     for wd_i in wdList:
-        infoPacket = routine(E_i,wd_i)
+	runParams.append([E_i, wd_i, saveIdx])
+        #infoPacket = routine(E_i,wd_i)
         
-	print('{}/{}'.format(saveIdx,totalL))
+	#print('{}/{}'.format(saveIdx,totalL))
 
-        if not os.path.exists(saveDir):
-            os.makedirs(saveDir)        
-        pickle.dump(infoPacket, open(os.path.join(saveDir,'{}.qpeak'.format(saveIdx)),'wb'))
+        #if not os.path.exists(saveDir):
+        #    os.makedirs(saveDir)        
+        #pickle.dump(infoPacket, open(os.path.join(saveDir,'{}.qpeak'.format(saveIdx)),'wb'))
         saveIdx += 1
+
+if not os.path.exists(saveDir):
+    os.makedirs(saveDir)
+
+mapping = pools.ProcessPool(WORKERS).map
+mapping(routine, runParams)
