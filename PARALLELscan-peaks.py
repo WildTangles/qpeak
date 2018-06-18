@@ -8,6 +8,7 @@ import pickle
 import os
 import glob
 import sys
+import time
 
 saveDir = 'peaks'
 
@@ -154,5 +155,7 @@ for E_i in EList:
 if not os.path.exists(saveDir):
     os.makedirs(saveDir)
 
+tstart = time.time()
 mapping = pools.ProcessPool(WORKERS).map
 mapping(routine, runParams)
+print('routine took {}s'.format(time.time() - tstart))
