@@ -4,3 +4,6 @@
 # qpeak save files
 .qpeak
 peaks/*
+
+#python venv
+venv/*
